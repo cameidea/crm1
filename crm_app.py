@@ -54,7 +54,22 @@ def local_css():
 
 # --- 2. Google Sheets 資料庫功能 ---
 # 警告：Google Sheets 不是即時資料庫，大量寫入可能會慢，且不適合高併發
-conn = st.connection("gsheets", type=GSheetsConnection)
+import streamlit as st
+from streamlit_gsheets import GSheetsConnection
+
+# --- 這裡開始是新的寫法 ---
+# 1. 讀取 secrets 設定
+raw_secrets = st.secrets["connections"]["gsheets"]
+
+# 2. 修正 private_key 的換行問題 (這行是關鍵！)
+secrets_dict = {
+    **raw_secrets,
+    "private_key": raw_secrets["private_key"].replace("\\n", "\n") 
+}
+
+# 3. 使用修正後的設定建立連線
+conn = st.connection("gsheets", type=GSheetsConnection, **secrets_dict)
+# --- 新寫法結束 ---
 
 def get_data(worksheet_name):
     """讀取某個分頁的所有資料"""
@@ -490,5 +505,6 @@ def main():
     if 'logged_in' not in st.session_state: st.session_state['logged_in'] = False
     if not st.session_state['logged_in']: local_css(); page_login_register()
     else: page_dashboard()
+
 
 if __name__ == "__main__": main()
