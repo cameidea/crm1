@@ -57,19 +57,24 @@ def local_css():
 import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 
-# --- 這裡開始是新的寫法 ---
-# 1. 讀取 secrets 設定
+import streamlit as st
+from streamlit_gsheets import GSheetsConnection
+
+# 1. 讀取 secrets
 raw_secrets = st.secrets["connections"]["gsheets"]
 
-# 2. 修正 private_key 的換行問題 (這行是關鍵！)
+# 2. 修正 private_key 的換行問題，並放入新的字典
 secrets_dict = {
     **raw_secrets,
     "private_key": raw_secrets["private_key"].replace("\\n", "\n") 
 }
 
-# 3. 使用修正後的設定建立連線
+# 3. 【關鍵修正】刪除會導致衝突的 "type" 欄位
+if "type" in secrets_dict:
+    del secrets_dict["type"]
+
+# 4. 建立連線
 conn = st.connection("gsheets", type=GSheetsConnection, **secrets_dict)
-# --- 新寫法結束 ---
 
 def get_data(worksheet_name):
     """讀取某個分頁的所有資料"""
@@ -508,3 +513,4 @@ def main():
 
 
 if __name__ == "__main__": main()
+
